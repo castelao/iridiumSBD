@@ -1,0 +1,2 @@
+Click>=6.7
+psycopg2>=2.6
