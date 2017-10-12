@@ -28,7 +28,7 @@ test_requirements = [
 
 setup(
     name='isbd',
-    version='0.0.3',
+    version='0.0.4',
     description="Communication system for Iridium Short Burst Data Service.",
     long_description=readme + '\n\n' + history,
     author="Guilherme Castelão",
@@ -56,7 +56,6 @@ setup(
         "Programming Language :: Python :: 2",
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
