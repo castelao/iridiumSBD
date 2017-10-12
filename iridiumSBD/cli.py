@@ -12,7 +12,7 @@ import logging.handlers
 
 import click
 
-from .isbd import IridiumSBD
+from .iridiumSBD import IridiumSBD
 from .directip.server import runserver
 
 

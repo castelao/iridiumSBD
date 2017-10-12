@@ -9,7 +9,7 @@ import os.path
 import logging
 import json
 
-from ..isbd import valid_isbd, is_truncated, is_inbound, is_outbound
+from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
 
 
 module_logger = logging.getLogger('DirectIP')

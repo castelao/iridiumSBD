@@ -35,12 +35,12 @@ setup(
     author_email='guilherme@castelao.net',
     url='https://github.com/castelao/isbd',
     packages=[
-        'isbd',
-        'isbd.directip'
+        'iridiumSBD',
+        'iridiumSBD.directip',
         ],
     entry_points={
         'console_scripts': [
-            'isbd=isbd.cli:main'
+            'iridiumSBD=iridiumSBD.cli:main'
         ]
     },
     include_package_data=True,
