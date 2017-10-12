@@ -11,10 +11,13 @@ class Message(object):
     def __init__(self, content):
         self.content = content
         self.offset = 0
+
     def __str__(self):
         return str(self.content)
+
     def __len__(self):
         return len(self.content)
+
     def __getitem__(self, item):
         """
             Avoids to convert to string when requesting only 1 item,
@@ -23,6 +26,7 @@ class Message(object):
         if (type(item) is int) and (item != -1):
             item = slice(item, item+1)
         return self.content[self.offset:][item]
+
     def consume(self, fmt):
         size = calcsize(fmt)
         output = unpack_from(fmt, self.content, offset=self.offset)
@@ -52,15 +56,15 @@ def parse_MO_header(msg):
 
     header['IMEI'] = header['IMEI'].decode()
     header['session_datetime'] = \
-            datetime(1970, 1, 1, 0, 0, 0) + \
-            timedelta(seconds=header['session_epoch'])
+        datetime(1970, 1, 1, 0, 0, 0) + \
+        timedelta(seconds=header['session_epoch'])
     return header
 
 
 def parse_MO_location(msg):
         assert msg[0:1] == b'\x03'
 
-        packformat= '>cHBBHBHI'
+        packformat = '>cHBBHBHI'
         #block_len = struct.calcsize(packformat)
         #if block_len > len(msg):
         #    return
@@ -79,14 +83,10 @@ def parse_MO_location(msg):
         location['lon_min'] = m[6] * 1e-3
         location['CEP_radius'] = m[7]
 
-        location['latitude'] = \
-                location['lat_deg'] + \
-                location['lat_min'] / 60.
+        location['latitude'] = location['lat_deg'] + location['lat_min'] / 60.
         if location['orient'] in (2, 3):
             location['latitude'] *= -1
-        location['longitude'] = \
-                location['lon_deg'] + \
-                location['lon_min'] / 60.
+        location['longitude'] = location['lon_deg'] + location['lon_min'] / 60.
         if location['orient'] in (1, 3):
             location['longitude'] *= -1
 
@@ -124,7 +124,7 @@ def parse_MO_payload(msg):
 
 def parse_MO_confirmation(msg):
         assert msg[0:1] == b'\x05'
-        packformat= '>cHb'
+        packformat = '>cHb'
         block_len = struct.calcsize(packformat)
         if block_len > len(msg):
             return
@@ -140,7 +140,7 @@ def parse_MO_confirmation(msg):
 
 def parse_MT_confirmation(msg):
         assert msg[0:1] == b'\x44'
-        packformat= '>cHI15sIh'
+        packformat = '>cHI15sIh'
         block_len = struct.calcsize(packformat)
         if block_len > len(msg):
             return
@@ -206,7 +206,7 @@ class IridiumSBD(object):
                 MO Payload IEI                0x02
                 MO Location Information IEI   0x03
                 MO Confirmation IEI           0x05
-            
+
             What is the syntax for the MO Receipt Confirmation???
         """
         assert msg[0:1] == b'\x01', "I can only handle Protocol Revision 1"
@@ -286,7 +286,7 @@ def message_type(msg):
     assert msg[:1] == b'\x01', "Sorry, can only handle revision \\x01"
     if msg[3:4] in [b'\x01', b'\x02', b'\x03', b'\x04', b'\x05']:
         return 'MO'
-    elif  msg[3:4] in [b'\x41', b'\x42', b'\x44', b'\x46']:
+    elif msg[3:4] in [b'\x41', b'\x42', b'\x44', b'\x46']:
         return 'MT'
 
 

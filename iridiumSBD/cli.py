@@ -4,7 +4,8 @@
 """ Command line utilities for Iridium DirectIP
 
 
-    python directip --loglevel=info --logfile=/var/log/directip listen --host=localhost --port=10800
+    python directip --loglevel=info --logfile=/var/log/directip listen \
+            --host=localhost --port=10800
 """
 
 import logging
@@ -17,9 +18,12 @@ from .directip.server import runserver
 
 
 @click.group()
-@click.option('--loglevel', type=click.Choice(['debug', 'info', 'warn', 'error']),
+@click.option(
+        '--loglevel',
+        type=click.Choice(['debug', 'info', 'warn', 'error']),
         default='info')
-@click.option('--logpath',
+@click.option(
+        '--logpath',
         default=None)
 def main(loglevel, logpath):
     """ Utilities for Iridium DirectIP communication
