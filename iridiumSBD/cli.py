@@ -32,7 +32,8 @@ def main(loglevel, logpath):
 
     # create logger with 'directip'
     logger = logging.getLogger('DirectIP')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger.setLevel(logging.DEBUG)
 
     if logfile is not None:
