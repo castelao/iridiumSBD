@@ -55,7 +55,9 @@ def main(loglevel, logpath):
 @main.command(name='listen')
 @click.option('--host', type=click.STRING)
 @click.option('--port', type=click.INT, default=10800)
-def listen(host, port):
+@click.option('postProcessing', '--post-processing', type=click.STRING,
+        help='External shell command to run on received messages.')
+def listen(host, port, postProcessing):
     """ Run server to listen for transmissions
     """
     logger = logging.getLogger('DirectIP')
@@ -65,7 +67,7 @@ def listen(host, port):
         assert host is not None
 
     logger.debug('Calling server.')
-    runserver(host, port)
+    runserver(host, port, postProcessing)
 
 
 @main.command(name='dump')

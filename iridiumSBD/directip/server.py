@@ -7,6 +7,7 @@ from io import open
 import os.path
 import logging
 import json
+import subprocess
 try:
     import socketserver
 except:
@@ -49,7 +50,7 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
-    def __init__(self, request, client_address, server):
+    def __init__(self, request, client_address, server, postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server.DirectIPHandler')
         self.logger.debug('Initializing DirectIPHandler')
         socketserver.BaseRequestHandler.__init__(
@@ -95,6 +96,18 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
             ack = b'1\x00\x04\x05\x00\x01\x01'
             s = self.request.send(ack)
 
+            if self.server.postProcessing is not None:
+                postProcessing = self.server.postProcessing
+                try:
+                    self.logger.debug('Running external post-processing: %s',
+                            postProcessing)
+                    subprocess.run(postProcessing)
+                    output = subprocess.check_output(postProcessing)
+                    self.logger.debug(
+                            'Post-processing output: {}'.format(output))
+                except:
+                    self.logger.warn('Failed to run external post-processing')
+
         elif is_outbound(self.data):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((host, port))
@@ -108,9 +121,10 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
 
 
 class DirectIPServer(socketserver.TCPServer):
-    def __init__(self, server_address):
+    def __init__(self, server_address, postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.debug('Initializing DirectIPServer')
+        self.postProcessing = postProcessing
         socketserver.TCPServer.__init__(self,
                 server_address, RequestHandlerClass=DirectIPHandler)
 
@@ -120,8 +134,8 @@ class DirectIPServer(socketserver.TCPServer):
                 self, request, client_address)
 
 
-def runserver(host, port):
-    server = DirectIPServer((host, port))
+def runserver(host, port, postProcessing=None):
+    server = DirectIPServer((host, port), postProcessing)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
         server.serve_forever()
