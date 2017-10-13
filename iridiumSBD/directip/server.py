@@ -2,12 +2,15 @@
 """
 
 from datetime import datetime
-import socketserver
 import socket
 from io import open
 import os.path
 import logging
 import json
+try:
+    import socketserver
+except:
+    import SocketServer as socketserver
 
 from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
 
