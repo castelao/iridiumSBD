@@ -27,7 +27,7 @@ test_requirements = [
 ]
 
 setup(
-    name='isbd',
+    name='iridiumSBD',
     version='0.0.4',
     description="Communication system for Iridium Short Burst Data Service.",
     long_description=readme + '\n\n' + history,
