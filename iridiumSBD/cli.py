@@ -70,7 +70,7 @@ def listen(host, port, postProcessing):
 @main.command(name='dump')
 @click.argument('file', type=click.File('rb'))
 def dump(file):
-    """ Temporary solution to dump an isbd message
+    """ Temporary solution to dump an ISBD message
     """
     msg = IridiumSBD(file.read())
     print("protocol_revision: {}".format(msg.attributes['protocol_revision']))
