@@ -19,8 +19,8 @@ from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
 module_logger = logging.getLogger('DirectIP')
 DATADIR = "/home/gs/data/isbd"
 assert os.path.isdir(DATADIR)
-assert os.path.isdir(os.path.join(DATADIR, 'inbox')
-assert os.path.isdir(os.path.join(DATADIR, 'corrupted')
+assert os.path.isdir(os.path.join(DATADIR, 'inbox'))
+assert os.path.isdir(os.path.join(DATADIR, 'corrupted'))
 
 
 def save_isbd_msg(client_address, data, t0):
@@ -29,8 +29,8 @@ def save_isbd_msg(client_address, data, t0):
                 t0.strftime('%Y%m%d%H%M%S%f'), client_address[0]))
     module_logger.debug('Saving isbd message: %s' % filename)
     with open(filename, 'wb') as fid:
-        print("{} wrote:".format(client_address[0]))
         fid.write(data)
+        print("{} wrote:".format(filename))
     return filename
 
 
