@@ -23,13 +23,11 @@ from .directip.server import runserver
         type=click.Choice(['debug', 'info', 'warn', 'error']),
         default='info')
 @click.option(
-        '--logpath',
+        '--logfile',
         default=None)
-def main(loglevel, logpath):
+def main(loglevel, logfile):
     """ Utilities for Iridium DirectIP communication
     """
-    logfile = './directip.log'
-
     # create logger with 'directip'
     logger = logging.getLogger('DirectIP')
     formatter = logging.Formatter(
