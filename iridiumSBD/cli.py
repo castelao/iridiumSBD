@@ -36,7 +36,6 @@ def main(loglevel, logfile):
 
     if logfile is not None:
         # create file handler which logs even debug messages
-        #fh = logging.FileHandler(logfile)
         fh = logging.handlers.RotatingFileHandler(
               logfile, maxBytes=(1024**2), backupCount=10)
         fh.setLevel(logging.DEBUG)
