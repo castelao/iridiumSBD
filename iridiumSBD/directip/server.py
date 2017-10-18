@@ -99,10 +99,11 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
             if self.server.postProcessing is not None:
                 postProcessing = self.server.postProcessing
                 try:
-                    self.logger.debug('Running external post-processing: %s',
+                    self.logger.debug('External post-processing: %s',
                             postProcessing)
-                    subprocess.run(postProcessing)
-                    output = subprocess.check_output(postProcessing)
+                    cmd = (postProcessing, filename)
+                    self.logger.debug("Running: {}".format(cmd))
+                    output = subprocess.check_output(cmd)
                     self.logger.debug(
                             'Post-processing output: {}'.format(output))
                 except:
