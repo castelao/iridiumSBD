@@ -2,6 +2,11 @@
 History
 =======
 
+0.0.4 (2017-10-13)
+------------------
+
+* Optional external procedure to handle received messages.
+
 0.0.2 (2017-08-28)
 ------------------
 
