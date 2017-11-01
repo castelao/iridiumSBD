@@ -161,26 +161,36 @@ def parse_MT_confirmation(msg):
 
 
 class IridiumSBD(object):
-    """ Parse an Iridium SBD messge from DirectIP
+    """Parse an Iridium SBD messge from DirectIP.
 
-        Iridium transmit SBD messages through DirectIP using its own
-          binary format. This class gives a comprehensible object.
+    Iridium transmit SBD messages through DirectIP using its own binary format.
+    This class gives a comprehensible object.
 
-        One can run this as:
-        >>> isbd = IridiumSBD(msg)
-        >>> isbd.header # {'IEI': ..., 'length': ...}
-        >>> isbd.payload
-        >>> isbd.confirmation
+    Attributes:
+        header: A dictionary with the section header of an ISBD message.
+        payload: A dictionary with the section payload of an ISBD message.
+        confirmation: A dictionary with the section confirmation of an ISBD
+            message.
+        mtype: Message type, MO or MT.
 
-        >>> isbd.mtype # 'MO' | 'MT'
+    One can run this as:
 
-        >>> isbd.decode() # Parse the binary message
-        >>> isbd.encode() # Encode proprieties into a binary message
+    >>> isbd = IridiumSBD(msg)
+    >>> isbd.header # {'IEI': ..., 'length': ...}
+    >>> isbd.payload
+    >>> isbd.confirmation
+
+    >>> isbd.mtype # 'MO' | 'MT'
+
+    >>> isbd.decode() # Parse the binary message
+    >>> isbd.encode() # Encode proprieties into a binary message
     """
     def __init__(self, msg=None):
-        """ Initialize an IridiumSBD object
+        """Initialize an IridiumSBD object.
 
-            If message is given in the creation, loads it right the way.
+        Args:
+            msg (byte): A binary ISBD message (optional). If given, runs
+                load(msg).
         """
         self.mtype = None
         if msg is not None:
@@ -190,24 +200,28 @@ class IridiumSBD(object):
         return self.attributes
 
     def load(self, msg):
-        """ Parse an Iridium SBD binary message.
+        """Parse an Iridium SBD binary message.
 
-            The input (msg) is the Iridium SBD message in its original
-              binary format.
+        Args:
+            msg (byte): A binary ISBD message (optional). If given, runs
+                load(msg).
 
-            Big endian
-            Protocol Revision: 1
-            Data segmented into information elements (IEs)
+        The input (msg) is the Iridium SBD message in its original
+            binary format.
+
+        Big endian
+        Protocol Revision: 1
+        Data segmented into information elements (IEs)
                 IEI ID      1
                 IEI length  2 (content length, i.e. after the 3 initial bytes)
                 IEI content N
-            Information Elements Identifiers (IEI)
+        Information Elements Identifiers (IEI)
                 MO Header IEI                 0x01
                 MO Payload IEI                0x02
                 MO Location Information IEI   0x03
                 MO Confirmation IEI           0x05
 
-            What is the syntax for the MO Receipt Confirmation???
+        What is the syntax for the MO Receipt Confirmation???
         """
         assert msg[0:1] == b'\x01', "I can only handle Protocol Revision 1"
 

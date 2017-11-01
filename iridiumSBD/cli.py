@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" Command line utilities for Iridium DirectIP
+"""Command line utilities for IridiumSBD package
 
-
-    python directip --loglevel=info --logfile=/var/log/directip listen \
-            --host=localhost --port=10800
+This utility allows to access and use the IridiumSBD package resources from
+the command line without requiring to explicitly open the Python first. Note
+that it still requires Python installed in the running machine.
 """
+#    python directip --loglevel=info --logfile=/var/log/directip listen \
+#            --host=localhost --port=10800
 
 import logging
 import logging.handlers

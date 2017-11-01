@@ -1,4 +1,7 @@
-""" TCP Socket server to receive DirectIP messages from Iridium
+"""TCP Socket server to communicate Direct-IP messages from Iridium Gateway.
+
+The server is the one who actually communicate with Iridium Gateway, receiving
+and transmitting binary messages.
 """
 
 from datetime import datetime
@@ -45,8 +48,10 @@ def save_corrupted_msg(client_address, data, t0):
 
 
 class DirectIPHandler(socketserver.BaseRequestHandler):
-    """
-    The request handler class for our server.
+    """A request handler for each transmission.
+
+    Once the DirectIPServer receives a call, it uses DirectIPHandler to deal
+    with the transmission.
 
     It is instantiated once per connection to the server, and must
     override the handle() method to implement communication to the
@@ -61,11 +66,10 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         """
 
-            recv() get everything from one sendall(), while readline() will
-              call multiple recv() until gets a newline character.
-            It is OK to use a buffer of 2048, since the largest message that
-              an Iridium can send is 1960 bytes (9522A/B) plus a header of 51
-              bytes.
+        recv() get everything from one sendall(), while readline() will call
+        multiple recv() until gets a newline character.
+        It is OK to use a buffer of 2048, since the largest message that an
+        Iridium can send is 1960 bytes (9522A/B) plus a header of 51 bytes.
         """
         #self.request.settimeout(1)
         self.logger.debug('Receiving a call from %s' % self.client_address[0])
@@ -124,6 +128,8 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
 
 
 class DirectIPServer(socketserver.TCPServer):
+    """A TCPServer modified for Direct-IP communication.
+    """
     def __init__(self, server_address, postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.debug('Initializing DirectIPServer')
@@ -138,6 +144,17 @@ class DirectIPServer(socketserver.TCPServer):
 
 
 def runserver(host, port, postProcessing=None):
+    """Runs a Direct-IP server to listen for messages.
+
+    Initiate DirectIPServer and keep it alive listening for calls.
+
+    Args:
+        host (str): Host to be listening as. For example: 127.0.0.1
+        port (int): Port to listen on. For example: 10800
+        postProcessing (str): Optional command or script to be called for each
+            mesage received.  It's better to use a absolute path. A filename
+            with the message just received will be the single argument.
+    """
     server = DirectIPServer((host, port), postProcessing)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:

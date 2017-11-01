@@ -5,6 +5,17 @@ Installation
 ============
 
 
+Requirements
+------------
+
+IridiumSBD is a Python package, thus requiring a running `Python`_ in your machine. It is compatible with Python 2 and 3, but I strongly recommend you to use Python 3 if you can.
+
+IridiumSBD requires the Python package `Click`_. The installation with pip automatically takes care of the requirements, but to install from the source it is necessary to download and install `Click`_ first.
+
+.. _Python: https://www.python.org/
+.. _Click: http://http://click.pocoo.org/6/
+
+
 Stable release
 --------------
 

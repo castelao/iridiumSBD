@@ -40,7 +40,10 @@ import iridiumSBD
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = [
+        'sphinx.ext.autodoc',
+        'sphinx.ext.viewcode',
+        'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -63,7 +66,7 @@ copyright = u"2017, Guilherme Castelão"
 # the built documents.
 #
 # The short X.Y version.
-version = iridiumSBD.__version__
+version = '.'.join((iridiumSBD.__version__).split('.')[:2])
 # The full version, including alpha/beta/rc tags.
 release = iridiumSBD.__version__
 
