@@ -16,11 +16,11 @@ To obtain help for a specific sub-command, for example, running a server::
     
 To initialize a direct-IP server::
 
-    iridiumSBD --logpath=/var/logs --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800
+    iridiumSBD --logfile=/var/logs/direcip.log --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800
 
 Running a direct-IP server with a post-processing procedure::
 
-    iridiumSBD --logpath=/var/logs --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800 --post-processing=/home/myself/bin/my_postprocessing_script.sh
+    iridiumSBD --logfile=/var/logs/directip.log --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800 --post-processing=/home/myself/bin/my_postprocessing_script.sh
 
 To run the server even after logout::
 
@@ -65,7 +65,7 @@ that is a good example for tests, where a lot of information will be saved. For 
 
 To save logs in local files, so in case of problems one can investigate its history, include the logpath argument. If not given, the log does not save it, but only show in the standard output, usually the screen. An example to save logs in files is::
 
-    iridiumSBD --logpath=/var/logs --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800
+    iridiumSBD --logfile=/var/logs/directip.log --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800
  
 The goal or IridiumSBD Python package is to only communicate binary packages. To allow customization, it is possible to define a command, or script, to be called every time a new message is received. For instance, if the server is called as::
 
