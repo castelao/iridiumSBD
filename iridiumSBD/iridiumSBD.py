@@ -318,3 +318,19 @@ def valid_isbd(msg):
         return False
 
     return True
+
+
+def dump(file, imei):
+    """Show isbd message header as text
+    """
+    msg = IridiumSBD(file.read())
+    if imei:
+        print(msg.attributes['header']['IMEI'])
+        return
+
+    print("protocol_revision: {}".format(msg.attributes['protocol_revision']))
+    print("msg_length: {}".format(msg.attributes['msg_length']))
+    print("actual_length: {}".format(msg.attributes['actual_length']))
+    print("header section")
+    for v in msg.attributes['header']:
+        print("  {}: {}".format(v, msg.attributes['header'][v]))

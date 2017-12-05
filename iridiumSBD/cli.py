@@ -16,6 +16,7 @@ import logging.handlers
 import click
 
 from .iridiumSBD import IridiumSBD
+from .iridiumSBD import dump
 from .directip.server import runserver
 
 
@@ -71,16 +72,11 @@ def listen(host, port, postProcessing):
 
 @main.command(name='dump')
 @click.argument('file', type=click.File('rb'))
-def dump(file):
+@click.option('--imei', is_flag=True, help='Show IMEI only')
+def isbddump(file, imei):
     """ Temporary solution to dump an ISBD message
     """
-    msg = IridiumSBD(file.read())
-    print("protocol_revision: {}".format(msg.attributes['protocol_revision']))
-    print("msg_length: {}".format(msg.attributes['msg_length']))
-    print("actual_length: {}".format(msg.attributes['actual_length']))
-    print("header section")
-    for v in msg.attributes['header']:
-        print("  {}: {}".format(v, msg.attributes['header'][v]))
+    return dump(file, imei)
 
 
 if __name__ == '__main__':
