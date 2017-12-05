@@ -49,7 +49,7 @@ def main(loglevel, logfile):
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    logger.info('Running DirectIP command line.')
+    logger.debug('Running DirectIP command line.')
 
 
 @main.command(name='listen')
