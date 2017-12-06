@@ -15,7 +15,6 @@ import logging.handlers
 
 import click
 
-from .iridiumSBD import IridiumSBD
 from .iridiumSBD import dump
 from .directip.server import runserver
 
@@ -25,9 +24,7 @@ from .directip.server import runserver
         '--loglevel',
         type=click.Choice(['debug', 'info', 'warn', 'error']),
         default='info')
-@click.option(
-        '--logfile',
-        default=None)
+@click.option('--logfile', default=None)
 def main(loglevel, logfile):
     """ Utilities for Iridium DirectIP communication
     """
@@ -55,7 +52,8 @@ def main(loglevel, logfile):
 @main.command(name='listen')
 @click.option('--host', type=click.STRING)
 @click.option('--port', type=click.INT, default=10800)
-@click.option('postProcessing', '--post-processing', type=click.STRING,
+@click.option(
+        'postProcessing', '--post-processing', type=click.STRING,
         help='External shell command to run on received messages.')
 def listen(host, port, postProcessing):
     """ Run server to listen for transmissions
