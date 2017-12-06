@@ -69,7 +69,7 @@ The log level can be selected with '--loglevel=info', like::
 
 that is a good example for tests, where a lot of information will be saved. For operational it is probably fine to use info or warn level.
 
-To save logs in local files, so in case of problems one can investigate its history, include the logpath argument. If not given, the log does not save it, but only show in the standard output, usually the screen. An example to save logs in files is::
+To save logs in local files, so in case of problems one can investigate its history, include the logfile argument. If not given, the log does not save it, but only show in the standard output, usually the screen. An example to save logs in files is::
 
     iridiumSBD --logfile=/var/logs/directip.log --loglevel=info listen --host=YOUR.IP.ADDRESS --port=10800
  
