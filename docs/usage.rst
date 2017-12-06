@@ -47,6 +47,12 @@ IridiumSBD server takes that job on receiving Mobile Originated (MO) messages an
 
 For MO messages, IridiumSBD server saves the full binary transmission in a local file, and if given a post-processing script, it is triggered on every transmission with the binary file as an argument.
 
+.. figure:: figs/IridiumSBD_MO_direct-IP.pdf
+   :align: center
+   :alt: Flowchart IridiumSBD MO message
+
+   Flowchart of IridiumSBD server receiving an MO message.
+
 Once the IridiumSBD is installed, it includes the command line: iridiumSBD. The minimal call to run it is::
 
     iridiumSBD listen --host=YOUR.IP.ADDRESS
