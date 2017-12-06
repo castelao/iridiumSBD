@@ -9,7 +9,6 @@ import socket
 from io import open
 import os.path
 import logging
-import json
 import subprocess
 try:
     import socketserver
@@ -81,8 +80,8 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
         while is_truncated(self.data):
             self.logger.debug('Message incomplete. Waiting for the rest')
             self.data += self.request.recv(2048)
-            self.logger.debug('Extending message to %s bytes' % \
-                    (len(self.data)))
+            self.logger.debug(
+                    'Extending message to %s bytes' % (len(self.data)))
 
         if not valid_isbd(self.data):
             self.logger.error('Invalid message.')
@@ -105,8 +104,8 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
             if self.server.postProcessing is not None:
                 postProcessing = self.server.postProcessing
                 try:
-                    self.logger.debug('External post-processing: %s',
-                            postProcessing)
+                    self.logger.debug(
+                            'External post-processing: %s', postProcessing)
                     cmd = (postProcessing, filename)
                     self.logger.debug("Running: {}".format(cmd))
                     output = subprocess.check_output(cmd)
@@ -130,12 +129,16 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
 class DirectIPServer(socketserver.TCPServer):
     """A TCPServer modified for Direct-IP communication.
     """
-    def __init__(self, server_address, postProcessing=None):
+    def __init__(self,
+                 server_address,
+                 bind_and_activate=True,
+                 postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.debug('Initializing DirectIPServer')
         self.postProcessing = postProcessing
-        socketserver.TCPServer.__init__(self,
-                server_address, RequestHandlerClass=DirectIPHandler)
+        socketserver.TCPServer.__init__(
+                self, server_address, RequestHandlerClass=DirectIPHandler,
+                bind_and_activate=bind_and_activate)
 
     def verify_request(self, request, client_address):
         self.logger.debug('verify_request(%s, %s)', request, client_address)
