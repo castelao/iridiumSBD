@@ -135,6 +135,10 @@ class DirectIPServer(socketserver.TCPServer):
                  postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.debug('Initializing DirectIPServer')
+
+        if (postProcessing != None) and (~os.path.exists(postProcessing)):
+            self.logger.error(
+                    "Invalid postProcessing: %s" % postProcessing)
         self.postProcessing = postProcessing
         socketserver.TCPServer.__init__(
                 self, server_address, RequestHandlerClass=DirectIPHandler,
