@@ -19,15 +19,13 @@ from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
 
 
 module_logger = logging.getLogger('DirectIP')
-DATADIR = "/home/gs/data/isbd"
-assert os.path.isdir(DATADIR)
-assert os.path.isdir(os.path.join(DATADIR, 'inbox'))
-assert os.path.isdir(os.path.join(DATADIR, 'corrupted'))
 
-
-def save_isbd_msg(client_address, data, t0):
+def save_isbd_msg(outputdir, client_address, data, t0):
+    if not os.path.isdir(os.path.join(outputdir, 'inbox')):
+        os.mkdir(outputdir)
+        os.mkdir(os.path.join(outputdir, 'inbox'))
     filename = os.path.join(
-            DATADIR, "inbox", "%s_%s.isbd" % (
+            outputdir, "inbox", "%s_%s.isbd" % (
                 t0.strftime('%Y%m%d%H%M%S%f'), client_address[0]))
     module_logger.debug('Saving isbd message: %s' % filename)
     with open(filename, 'wb') as fid:
@@ -36,9 +34,12 @@ def save_isbd_msg(client_address, data, t0):
     return filename
 
 
-def save_corrupted_msg(client_address, data, t0):
+def save_corrupted_msg(outputdir, client_address, data, t0):
+    if not os.path.isdir(os.path.join(outputdir, 'corrupted')):
+        os.mkdir(outputdir)
+        os.mkdir(os.path.join(outputdir, 'corrupted'))
     filename = os.path.join(
-            DATADIR, "corrupted", "%s_%s.isbd" % (
+            outputdir, "corrupted", "%s_%s.isbd" % (
                 t0.strftime('%Y%m%d%H%M%S%f'), client_address[0]))
     module_logger.debug('Saving corrupted meessage: %s' % filename)
     with open(filename, 'wb') as fid:
@@ -85,14 +86,16 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
 
         if not valid_isbd(self.data):
             self.logger.error('Invalid message.')
-            save_corrupted_msg(self.client_address, self.data, t0)
+            save_corrupted_msg(
+                    self.server.datadir, self.client_address, self.data, t0)
             return
 
         #self.data = self.request.recv(1024).strip()
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         #self.data = self.rfile.readline().strip()
-        filename = save_isbd_msg(self.client_address, self.data, t0)
+        filename = save_isbd_msg(
+                self.server.datadir, self.client_address, self.data, t0)
 
         if is_inbound(self.data):
             # Acknowledgment message
@@ -131,18 +134,24 @@ class DirectIPServer(socketserver.TCPServer):
     """
     def __init__(self,
                  server_address,
-                 bind_and_activate=True,
+                 datadir,
                  postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.debug('Initializing DirectIPServer')
 
-        if (postProcessing != None) and (~os.path.exists(postProcessing)):
+        if not os.path.exists(datadir):
+            self.logger.critical('Invalid datadir: {}'.format(datadir))
+            assert os.path.exists(datadir)
+        self.datadir = datadir
+        self.logger.info('Data directory: {}'.format(datadir))
+
+        if (postProcessing != None) and (not os.path.exists(postProcessing)):
             self.logger.error(
                     "Invalid postProcessing: %s" % postProcessing)
         self.postProcessing = postProcessing
+
         socketserver.TCPServer.__init__(
-                self, server_address, RequestHandlerClass=DirectIPHandler,
-                bind_and_activate=bind_and_activate)
+                self, server_address, RequestHandlerClass=DirectIPHandler)
 
     def verify_request(self, request, client_address):
         self.logger.debug('verify_request(%s, %s)', request, client_address)
@@ -150,7 +159,7 @@ class DirectIPServer(socketserver.TCPServer):
                 self, request, client_address)
 
 
-def runserver(host, port, postProcessing=None):
+def runserver(host, port, datadir, postProcessing=None):
     """Runs a Direct-IP server to listen for messages.
 
     Initiate DirectIPServer and keep it alive listening for calls.
@@ -162,7 +171,7 @@ def runserver(host, port, postProcessing=None):
             mesage received.  It's better to use a absolute path. A filename
             with the message just received will be the single argument.
     """
-    server = DirectIPServer((host, port), postProcessing)
+    server = DirectIPServer((host, port), datadir, postProcessing)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
         server.serve_forever()

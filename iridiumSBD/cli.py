@@ -10,6 +10,7 @@ that it still requires Python installed in the running machine.
 #    python directip --loglevel=info --logfile=/var/log/directip listen \
 #            --host=localhost --port=10800
 
+import os
 import logging
 import logging.handlers
 
@@ -53,9 +54,12 @@ def main(loglevel, logfile):
 @click.option('--host', type=click.STRING)
 @click.option('--port', type=click.INT, default=10800)
 @click.option(
+        '--datadir', type=click.STRING,
+        help='Directory where incomming messages are saved.')
+@click.option(
         'postProcessing', '--post-processing', type=click.STRING,
         help='External shell command to run on received messages.')
-def listen(host, port, postProcessing):
+def listen(host, port, datadir, postProcessing):
     """ Run server to listen for transmissions
     """
     logger = logging.getLogger('DirectIP')
@@ -64,8 +68,12 @@ def listen(host, port, postProcessing):
         logger.critical('Invalid host: "%s"' % host)
         assert host is not None
 
+    if datadir == None:
+        datadir = os.getcwd()
+        logger.warn('Missing --datadir. Will use current directory.')
+
     logger.debug('Calling server.')
-    runserver(host, port, postProcessing)
+    runserver(host, port, datadir, postProcessing)
 
 
 @main.command(name='dump')
