@@ -54,12 +54,16 @@ def main(loglevel, logfile):
 @click.option('--host', type=click.STRING)
 @click.option('--port', type=click.INT, default=10800)
 @click.option(
+        '--iridium-host', 'iridiumHost', type=click.STRING, default=None)
+@click.option(
+        '--iridium-port', 'iridiumPort', type=click.INT, default=10800)
+@click.option(
         '--datadir', type=click.STRING,
         help='Directory where incomming messages are saved.')
 @click.option(
         'postProcessing', '--post-processing', type=click.STRING,
         help='External shell command to run on received messages.')
-def listen(host, port, datadir, postProcessing):
+def listen(host, port, datadir, postProcessing, iridiumHost, iridiumPort):
     """ Run server to listen for transmissions
     """
     logger = logging.getLogger('DirectIP')
@@ -73,7 +77,13 @@ def listen(host, port, datadir, postProcessing):
         logger.warn('Missing --datadir. Will use current directory.')
 
     logger.debug('Calling server.')
-    runserver(host, port, datadir, postProcessing)
+    if (iridiumHost is not None) and (iridiumPort is not None):
+        logger.debug('Iridium server at %s:%s' % (iridiumHost, iridiumPort))
+        runserver(host, port, datadir, postProcessing,
+                  outbound_address=(iridiumHost, iridiumPort))
+    else:
+        logger.warn('Missing Iridium address to forward outbound messages!')
+        runserver(host, port, datadir, postProcessing)
 
 
 @main.command(name='dump')

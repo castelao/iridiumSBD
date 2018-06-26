@@ -118,8 +118,11 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
                     self.logger.warn('Failed to run external post-processing')
 
         elif is_outbound(self.data):
+            assert self.server.outbound_address is not None, \
+                    "Undefined outbound server."
+
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((host, port))
+            sock.connect(self.server.outbound_address)
             try:
                 sock.sendall(self.data)
                 response = sock.recv(2048)
@@ -135,9 +138,15 @@ class DirectIPServer(socketserver.TCPServer):
     def __init__(self,
                  server_address,
                  datadir,
-                 postProcessing=None):
+                 postProcessing=None,
+                 outbound_address=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.debug('Initializing DirectIPServer')
+
+        if outbound_address is not None:
+            self.logger.info('Outbound messages will be directed to: %s:%s' %
+                    outbound_address)
+            self.outbound_address = outbound_address
 
         if not os.path.exists(datadir):
             self.logger.critical('Invalid datadir: {}'.format(datadir))
@@ -159,7 +168,8 @@ class DirectIPServer(socketserver.TCPServer):
                 self, request, client_address)
 
 
-def runserver(host, port, datadir, postProcessing=None):
+def runserver(host, port, datadir, postProcessing=None,
+              outbound_address=None):
     """Runs a Direct-IP server to listen for messages.
 
     Initiate DirectIPServer and keep it alive listening for calls.
@@ -171,7 +181,9 @@ def runserver(host, port, datadir, postProcessing=None):
             mesage received.  It's better to use a absolute path. A filename
             with the message just received will be the single argument.
     """
-    server = DirectIPServer((host, port), datadir, postProcessing)
+    module_logger.debug('Initializing runserver().')
+    server = DirectIPServer((host, port), datadir, postProcessing,
+            outbound_address)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
         server.serve_forever()
