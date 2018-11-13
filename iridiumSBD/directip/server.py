@@ -30,7 +30,7 @@ def save_isbd_msg(outputdir, client_address, data, t0):
     module_logger.debug('Saving isbd message: %s' % filename)
     with open(filename, 'wb') as fid:
         fid.write(data)
-        print("{} wrote:".format(filename))
+    module_logger.debug("Saved: {}".format(filename))
     return filename
 
 
@@ -43,8 +43,8 @@ def save_corrupted_msg(outputdir, client_address, data, t0):
                 t0.strftime('%Y%m%d%H%M%S%f'), client_address[0]))
     module_logger.debug('Saving corrupted meessage: %s' % filename)
     with open(filename, 'wb') as fid:
-        print("{} wrote:".format(client_address[0]))
         fid.write(data)
+    module_logger.debug("Saved: {}".format(filename))
 
 
 class DirectIPHandler(socketserver.BaseRequestHandler):
