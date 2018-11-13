@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """TCP Socket server to communicate Direct-IP messages from Iridium Gateway.
 
 The server is the one who actually communicate with Iridium Gateway, receiving
