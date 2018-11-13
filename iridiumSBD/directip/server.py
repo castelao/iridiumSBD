@@ -12,6 +12,7 @@ from io import open
 import os.path
 import logging
 import subprocess
+import threading
 try:
     import socketserver
 except:
@@ -173,6 +174,10 @@ class DirectIPServer(socketserver.TCPServer):
                 self, request, client_address)
 
 
+class ThreadedDirectIPServer(socketserver.ThreadingMixIn, DirectIPServer):
+    pass
+
+
 def runserver(host, port, datadir, postProcessing=None,
               outbound_address=None):
     """Runs a Direct-IP server to listen for messages.
@@ -187,7 +192,7 @@ def runserver(host, port, datadir, postProcessing=None,
             with the message just received will be the single argument.
     """
     module_logger.debug('Initializing runserver().')
-    server = DirectIPServer((host, port), datadir, postProcessing,
+    server = ThreadedDirectIPServer((host, port), datadir, postProcessing,
             outbound_address)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
