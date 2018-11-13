@@ -114,6 +114,7 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
                 self.logger.debug("Running: {}".format(cmd))
                 try:
                     output = subprocess.run(cmd,
+                                            timeout=60,
                                             check=True,
                                             stdout=subprocess.PIPE)
                     self.logger.debug(
