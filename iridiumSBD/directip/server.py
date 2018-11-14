@@ -18,6 +18,7 @@ try:
 except:
     import SocketServer as socketserver
 
+from .. import __version__
 from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
 
 
@@ -147,7 +148,8 @@ class DirectIPServer(socketserver.TCPServer):
                  postProcessing=None,
                  outbound_address=None):
         self.logger = logging.getLogger('DirectIP.Server')
-        self.logger.debug('Initializing DirectIPServer')
+        self.logger.info(
+                'Initializing DirectIPServer version: {}'.format(__version__))
 
         if outbound_address is not None:
             self.logger.info('Outbound messages will be directed to: %s:%s' %
