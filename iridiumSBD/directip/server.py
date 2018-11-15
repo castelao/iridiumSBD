@@ -6,11 +6,14 @@ The server is the one who actually communicate with Iridium Gateway, receiving
 and transmitting binary messages.
 """
 
+from collections import OrderedDict
 from datetime import datetime
+import json
 import socket
 from io import open
 import os.path
 import logging
+import re
 import subprocess
 import threading
 try:
@@ -49,6 +52,53 @@ def save_corrupted_msg(outputdir, client_address, data, t0):
     with open(filename, 'wb') as fid:
         fid.write(data)
     module_logger.debug("Saved: {}".format(filename))
+
+
+class PhoneBook(object):
+    def __init__(self, filename=None, buffer_size=100):
+        self.initialize_phonebook(filename)
+        self.catalog = OrderedDict()
+        self.buffer_size = buffer_size
+
+    def __getitem__(self, item):
+        if item not in self.catalog:
+            with open(self.filename, 'r') as f:
+                catalog = json.load(f)
+            if item not in catalog:
+                for i in catalog:
+                    if re.match(i, item):
+                        item = i
+                        break
+            if (item in catalog) and (item not in self.catalog):
+                if len(self.catalog) >= self.buffer_size:
+                    self.catalog.popitem(0)
+                self.catalog[item] = catalog[item]['addr']
+        return self.catalog[item]
+
+    def initialize_phonebook(self, filename):
+        if filename is None:
+            filename = os.path.expanduser('~/.config/iridiumsbd/phonebook.json')
+        else:
+            filename = os.path.abspath(filename)
+        if not os.path.exists(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        if not os.path.exists(filename):
+            with open(filename, 'w') as f:
+                json.dump({}, f)
+        self.filename = filename
+
+    def append(self, imei, addr):
+        if imei in self.catalog:
+            return
+        with open(self.filename, 'r') as f:
+            db = json.load(f)
+        if (imei not in db) or (db[imei]['addr'] != addr):
+            db[imei] = {'addr': addr}
+            with open(self.filename, 'w') as f:
+                json.dump(db, f)
+        self.catalog[imei] = addr
+        if len(self.catalog) > self.buffer_size:
+            self.catalog.popitem(0)
 
 
 class DirectIPHandler(socketserver.BaseRequestHandler):
