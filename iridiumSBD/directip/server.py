@@ -95,6 +95,15 @@ class PhoneBook(object):
             self.dump({})
 
 
+    def contains(self, imei):
+        if imei in self.catalog:
+            return True
+        with open(self.filename, 'r') as f:
+                catalog = json.load(f)
+        if imei in catalog:
+            return True
+
+
     def append(self, imei, addr):
         if imei in self.catalog:
             return
