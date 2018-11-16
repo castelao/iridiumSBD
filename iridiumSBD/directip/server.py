@@ -164,8 +164,8 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         #self.data = self.rfile.readline().strip()
-        filename = save_isbd_msg(
-                self.server.datadir, self.client_address, self.data, t0)
+        filename = save_isbd_msg(self.server.datadir, self.client_address,
+                                 self.data, t0)
 
         if is_inbound(self.data):
             # Acknowledgment message
