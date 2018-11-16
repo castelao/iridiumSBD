@@ -191,11 +191,16 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
                     self.logger.warn('Failed to run external post-processing')
 
         elif is_outbound(self.data):
-            assert self.server.outbound_address is not None, \
-                    "Undefined outbound server."
+            # Temporary solution
+            from struct import unpack
+            imei = unpack('>15s', self.data[10:25])[0].decode()
+            outbound_address = (self.server.phoneBook[imei], 10800)
+
+            self.logger.info("MT tramission to {}, message:{}".format(
+                self.server.phoneBook[imei], self.data))
 
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(self.server.outbound_address)
+            sock.connect(outbound_address)
             try:
                 sock.sendall(self.data)
                 response = sock.recv(2048)
@@ -212,15 +217,13 @@ class DirectIPServer(socketserver.TCPServer):
                  server_address,
                  datadir,
                  postProcessing=None,
-                 outbound_address=None):
+                 phone_book=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.info(
                 'Initializing DirectIPServer version: {}'.format(__version__))
 
-        if outbound_address is not None:
-            self.logger.info('Outbound messages will be directed to: %s:%s' %
-                    outbound_address)
-            self.outbound_address = outbound_address
+        self.phoneBook = PhoneBook(phone_book)
+        self.logger.info('Using phone book: {}'.format(self.phoneBook.filename))
 
         if not os.path.exists(datadir):
             self.logger.critical('Invalid datadir: {}'.format(datadir))
@@ -247,7 +250,7 @@ class ThreadedDirectIPServer(socketserver.ThreadingMixIn, DirectIPServer):
 
 
 def runserver(host, port, datadir, postProcessing=None,
-              outbound_address=None):
+              phone_book=None):
     """Runs a Direct-IP server to listen for messages.
 
     Initiate DirectIPServer and keep it alive listening for calls.
@@ -260,8 +263,10 @@ def runserver(host, port, datadir, postProcessing=None,
             with the message just received will be the single argument.
     """
     module_logger.debug('Initializing runserver().')
-    server = ThreadedDirectIPServer((host, port), datadir, postProcessing,
-            outbound_address)
+    server = ThreadedDirectIPServer((host, port),
+                                    datadir=datadir,
+                                    postProcessing=postProcessing,
+                                    phone_book=phone_book)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
         server.serve_forever()
