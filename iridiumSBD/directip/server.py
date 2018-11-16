@@ -54,9 +54,10 @@ def save_corrupted_msg(outputdir, client_address, data, t0):
 
 class PhoneBook(object):
     def __init__(self, filename=None, buffer_size=100):
-        self.initialize_phonebook(filename)
-        self.catalog = OrderedDict()
+        self.lock = threading.Lock()
         self.buffer_size = buffer_size
+        self.catalog = OrderedDict()
+        self.initialize_phonebook(filename)
 
     def __getitem__(self, item):
         if item not in self.catalog:
@@ -73,17 +74,26 @@ class PhoneBook(object):
                 self.catalog[item] = catalog[item]['addr']
         return self.catalog[item]
 
-    def initialize_phonebook(self, filename):
+
+    def dump(self, catalog):
+        self.lock.acquire()
+        with open(self.filename, 'w') as f:
+            json.dump(catalog, f)
+        self.lock.release()
+
+
+    def initialize_phonebook(self, filename=None):
         if filename is None:
             filename = os.path.expanduser('~/.config/iridiumsbd/phonebook.json')
         else:
             filename = os.path.abspath(filename)
+        self.filename = filename
+
         if not os.path.exists(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         if not os.path.exists(filename):
-            with open(filename, 'w') as f:
-                json.dump({}, f)
-        self.filename = filename
+            self.dump({})
+
 
     def append(self, imei, addr):
         if imei in self.catalog:
@@ -92,8 +102,7 @@ class PhoneBook(object):
             db = json.load(f)
         if (imei not in db) or (db[imei]['addr'] != addr):
             db[imei] = {'addr': addr}
-            with open(self.filename, 'w') as f:
-                json.dump(db, f)
+            self.dump(db)
         self.catalog[imei] = addr
         if len(self.catalog) > self.buffer_size:
             self.catalog.popitem(0)
