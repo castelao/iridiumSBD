@@ -29,7 +29,6 @@ module_logger = logging.getLogger('DirectIP')
 
 def save_isbd_msg(outputdir, client_address, data, t0):
     if not os.path.isdir(os.path.join(outputdir, 'inbox')):
-        os.mkdir(outputdir)
         os.mkdir(os.path.join(outputdir, 'inbox'))
     filename = os.path.join(
             outputdir, "inbox", "%s_%s.isbd" % (
@@ -43,7 +42,6 @@ def save_isbd_msg(outputdir, client_address, data, t0):
 
 def save_corrupted_msg(outputdir, client_address, data, t0):
     if not os.path.isdir(os.path.join(outputdir, 'corrupted')):
-        os.mkdir(outputdir)
         os.mkdir(os.path.join(outputdir, 'corrupted'))
     filename = os.path.join(
             outputdir, "corrupted", "%s_%s.isbd" % (
