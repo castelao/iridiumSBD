@@ -274,13 +274,17 @@ def is_truncated(msg):
         Revision 1: The size of the rest of the message is given in the
           following two bytes, as an unsigned short integer.
 
+        A Direct-IP SBD message rev 1 can't have more than 2K. This must be a
+          corrupted message, so do not wait for more bytes and carry on. Here
+          is not the place to inform that is corrupted.
+
         Input: The binary ISBD message itself.
     """
     if len(msg) < 3:
         return True
 
     rev, size = unpack_from('>cH', msg)
-    if (rev == b'\x01') and (len(msg) < size + 3):
+    if (rev == b'\x01') and (size < 2048) and (len(msg) < size + 3):
         return True
 
 
