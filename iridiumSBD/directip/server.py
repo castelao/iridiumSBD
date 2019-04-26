@@ -82,7 +82,9 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
         self.data = self.request.recv(2048)
         self.logger.debug('Message received, %s bytes' % (len(self.data)))
 
-        while is_truncated(self.data):
+        for i in range(10):
+            if not is_truncated(self.data):
+                break
             self.logger.debug('Message incomplete. Waiting for the rest')
             self.data += self.request.recv(2048)
             self.logger.debug(
