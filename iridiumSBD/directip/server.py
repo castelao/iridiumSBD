@@ -6,7 +6,6 @@ The server is the one who actually communicate with Iridium Gateway, receiving
 and transmitting binary messages.
 """
 
-from collections import OrderedDict
 from datetime import datetime
 import json
 import socket
@@ -15,17 +14,17 @@ import os.path
 import logging
 import re
 import subprocess
-import threading
 try:
     import socketserver
 except:
     import SocketServer as socketserver
 
 from .. import __version__
-from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
+from ..iridiumSBD import valid_isbd, is_truncated
 
 
 module_logger = logging.getLogger('DirectIP')
+
 
 def save_isbd_msg(outputdir, client_address, data, t0):
     if not os.path.isdir(os.path.join(outputdir, 'inbox')):
@@ -50,71 +49,6 @@ def save_corrupted_msg(outputdir, client_address, data, t0):
     with open(filename, 'wb') as fid:
         fid.write(data)
     module_logger.debug("Saved: {}".format(filename))
-
-
-class PhoneBook(object):
-    def __init__(self, filename=None, buffer_size=100):
-        self.lock = threading.Lock()
-        self.buffer_size = buffer_size
-        self.catalog = OrderedDict()
-        self.initialize_phonebook(filename)
-
-    def __getitem__(self, item):
-        if item not in self.catalog:
-            with open(self.filename, 'r') as f:
-                catalog = json.load(f)
-            if item not in catalog:
-                for i in catalog:
-                    if re.match(i, item):
-                        item = i
-                        break
-            if (item in catalog) and (item not in self.catalog):
-                if len(self.catalog) >= self.buffer_size:
-                    self.catalog.popitem(0)
-                self.catalog[item] = catalog[item]['addr']
-        return self.catalog[item]
-
-
-    def dump(self, catalog):
-        self.lock.acquire()
-        with open(self.filename, 'w') as f:
-            json.dump(catalog, f)
-        self.lock.release()
-
-
-    def initialize_phonebook(self, filename=None):
-        if filename is None:
-            filename = os.path.expanduser('~/.config/iridiumsbd/phonebook.json')
-        else:
-            filename = os.path.abspath(filename)
-        self.filename = filename
-
-        if not os.path.exists(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        if not os.path.exists(filename):
-            self.dump({})
-
-
-    def contains(self, imei):
-        if imei in self.catalog:
-            return True
-        with open(self.filename, 'r') as f:
-                catalog = json.load(f)
-        if imei in catalog:
-            return True
-
-
-    def append(self, imei, addr):
-        if imei in self.catalog:
-            return
-        with open(self.filename, 'r') as f:
-            db = json.load(f)
-        if (imei not in db) or (db[imei]['addr'] != addr):
-            db[imei] = {'addr': addr}
-            self.dump(db)
-        self.catalog[imei] = addr
-        if len(self.catalog) > self.buffer_size:
-            self.catalog.popitem(0)
 
 
 class DirectIPHandler(socketserver.BaseRequestHandler):
@@ -167,47 +101,27 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
         filename = save_isbd_msg(self.server.datadir, self.client_address,
                                  self.data, t0)
 
-        if is_inbound(self.data):
-            # Acknowledgment message
-            self.logger.debug('Acknowledging message received.')
-            #ack = struct.pack('>cHcHb', b'1', 4, b'\x05', 1, 1)
-            ack = b'1\x00\x04\x05\x00\x01\x01'
-            s = self.request.send(ack)
+        # Acknowledgment message
+        self.logger.debug('Acknowledging message received.')
+        #ack = struct.pack('>cHcHb', b'1', 4, b'\x05', 1, 1)
+        ack = b'1\x00\x04\x05\x00\x01\x01'
+        s = self.request.send(ack)
 
-            if self.server.postProcessing is not None:
-                postProcessing = self.server.postProcessing
-                self.logger.debug('External post-processing: {}'.format(
-                    postProcessing))
-                cmd = (postProcessing, filename)
-                self.logger.debug("Running: {}".format(cmd))
-                try:
-                    output = subprocess.run(cmd,
-                                            timeout=60,
-                                            check=True,
-                                            stdout=subprocess.PIPE)
-                    self.logger.debug(
-                        'Post-processing output: {}'.format(output.stdout))
-                except:
-                    self.logger.warn('Failed to run external post-processing')
-
-        elif is_outbound(self.data):
-            # Temporary solution
-            from struct import unpack
-            imei = unpack('>15s', self.data[10:25])[0].decode()
-            outbound_address = (self.server.phoneBook[imei], 10800)
-
-            self.logger.info("MT tramission to {}, message:{}".format(
-                self.server.phoneBook[imei], self.data))
-
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(outbound_address)
+        if self.server.postProcessing is not None:
+            postProcessing = self.server.postProcessing
+            self.logger.debug('External post-processing: {}'.format(
+                postProcessing))
+            cmd = (postProcessing, filename)
+            self.logger.debug("Running: {}".format(cmd))
             try:
-                sock.sendall(self.data)
-                response = sock.recv(2048)
-                self.logger.debug("Received: {}".format(response))
-                self.request.send(response)
-            finally:
-                sock.close()
+                output = subprocess.run(cmd,
+                                        timeout=60,
+                                        check=True,
+                                        stdout=subprocess.PIPE)
+                self.logger.debug(
+                    'Post-processing output: {}'.format(output.stdout))
+            except:
+                self.logger.warn('Failed to run external post-processing')
 
 
 class DirectIPServer(socketserver.TCPServer):
@@ -216,14 +130,10 @@ class DirectIPServer(socketserver.TCPServer):
     def __init__(self,
                  server_address,
                  datadir,
-                 postProcessing=None,
-                 phone_book=None):
+                 postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
         self.logger.info(
                 'Initializing DirectIPServer version: {}'.format(__version__))
-
-        self.phoneBook = PhoneBook(phone_book)
-        self.logger.info('Using phone book: {}'.format(self.phoneBook.filename))
 
         if not os.path.exists(datadir):
             self.logger.critical('Invalid datadir: {}'.format(datadir))
@@ -249,8 +159,7 @@ class ThreadedDirectIPServer(socketserver.ThreadingMixIn, DirectIPServer):
     pass
 
 
-def runserver(host, port, datadir, postProcessing=None,
-              phone_book=None):
+def runserver(host, port, datadir, postProcessing=None):
     """Runs a Direct-IP server to listen for messages.
 
     Initiate DirectIPServer and keep it alive listening for calls.
@@ -265,8 +174,7 @@ def runserver(host, port, datadir, postProcessing=None,
     module_logger.debug('Initializing runserver().')
     server = ThreadedDirectIPServer((host, port),
                                     datadir=datadir,
-                                    postProcessing=postProcessing,
-                                    phone_book=phone_book)
+                                    postProcessing=postProcessing)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
         server.serve_forever()
