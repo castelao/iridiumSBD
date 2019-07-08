@@ -96,18 +96,18 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
                     self.server.datadir, self.client_address, self.data, t0)
             return
 
+        # Acknowledgment message
+        self.logger.debug('Acknowledging message received.')
+        #ack = struct.pack('>cHcHb', b'1', 4, b'\x05', 1, 1)
+        ack = b'1\x00\x04\x05\x00\x01\x01'
+        s = self.request.send(ack)
+
         #self.data = self.request.recv(1024).strip()
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         #self.data = self.rfile.readline().strip()
         filename = save_isbd_msg(self.server.datadir, self.client_address,
                                  self.data, t0)
-
-        # Acknowledgment message
-        self.logger.debug('Acknowledging message received.')
-        #ack = struct.pack('>cHcHb', b'1', 4, b'\x05', 1, 1)
-        ack = b'1\x00\x04\x05\x00\x01\x01'
-        s = self.request.send(ack)
 
         if self.server.postProcessing is not None:
             postProcessing = self.server.postProcessing
