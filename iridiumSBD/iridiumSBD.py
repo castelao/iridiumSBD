@@ -335,6 +335,10 @@ def dump(file, imei):
     print("protocol_revision: {}".format(msg.attributes['protocol_revision']))
     print("msg_length: {}".format(msg.attributes['msg_length']))
     print("actual_length: {}".format(msg.attributes['actual_length']))
-    print("header section")
+    print("Header section:")
     for v in msg.attributes['header']:
-        print("  {}: {}".format(v, msg.attributes['header'][v]))
+        print("  - {}: {}".format(v, msg.attributes['header'][v]))
+    if 'location' in msg.attributes:
+        print("Location section:")
+        for v in msg.attributes['location']:
+            print("  - {}: {}".format(v, msg.attributes['location'][v]))
