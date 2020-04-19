@@ -20,3 +20,12 @@ A python package to handle direct IP communications with Iridium gateway.
 The goal here is to organize it as a standalone Python package with the objective to communicate binary data with Iridium Gateway. It does not try to understand the data being transmitted/received, but that task should be done by another resource. As a python package it is easier to install and update on different machines. With a small and specific objective it is easier to write tests and maintain it.
 
 This is part of a bigger project for IDG communication system with remote instruments as Spray and SOLO.
+
+
+Alternatives
+------------
+
+Other Python packages related to ISBD:
+
+* http://xed.ch/project/isbd/  (Chris X Edwards)
+* https://github.com/gadomski/sbd (Pete Gadomski)
