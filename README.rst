@@ -1,3 +1,7 @@
+**Archived** : This is not active anymore for a long time. I'm keeping it since it might be a helpful reference, but there is no intention on maintaining it. This was a pilot project at IDG-SIO. Around 2017-2018, I developed another solution using Rust instead, so this Python package has not been used since that. This is a nice proof of concept but I found a latency up to O[100] miliseconds, which was occasionaly an issue.
+I don't recommend using this for production.
+You might be interested in checking out https://github.com/castelao/DirectIP.
+
 =========================
 Iridium SBD communication
 =========================
@@ -11,7 +15,6 @@ Iridium SBD communication
 .. image:: https://readthedocs.org/projects/isbd/badge/?version=latest
         :target: https://isbd.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
-
 
 Communication system for Iridium Short Burst Data Service.
 
