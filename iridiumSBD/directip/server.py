@@ -7,25 +7,27 @@ and transmitting binary messages.
 """
 
 from datetime import datetime
+import json
 import socket
 from io import open
 import os.path
 import logging
+import re
 import subprocess
-import threading
 try:
     import socketserver
 except:
     import SocketServer as socketserver
 
-from ..iridiumSBD import valid_isbd, is_truncated, is_inbound, is_outbound
+from .. import __version__
+from ..iridiumSBD import valid_isbd, is_truncated
 
 
 module_logger = logging.getLogger('DirectIP')
 
+
 def save_isbd_msg(outputdir, client_address, data, t0):
     if not os.path.isdir(os.path.join(outputdir, 'inbox')):
-        os.mkdir(outputdir)
         os.mkdir(os.path.join(outputdir, 'inbox'))
     filename = os.path.join(
             outputdir, "inbox", "%s_%s.isbd" % (
@@ -39,7 +41,6 @@ def save_isbd_msg(outputdir, client_address, data, t0):
 
 def save_corrupted_msg(outputdir, client_address, data, t0):
     if not os.path.isdir(os.path.join(outputdir, 'corrupted')):
-        os.mkdir(outputdir)
         os.mkdir(os.path.join(outputdir, 'corrupted'))
     filename = os.path.join(
             outputdir, "corrupted", "%s_%s.isbd" % (
@@ -81,7 +82,9 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
         self.data = self.request.recv(2048)
         self.logger.debug('Message received, %s bytes' % (len(self.data)))
 
-        while is_truncated(self.data):
+        for i in range(10):
+            if not is_truncated(self.data):
+                break
             self.logger.debug('Message incomplete. Waiting for the rest')
             self.data += self.request.recv(2048)
             self.logger.debug(
@@ -93,49 +96,34 @@ class DirectIPHandler(socketserver.BaseRequestHandler):
                     self.server.datadir, self.client_address, self.data, t0)
             return
 
+        # Acknowledgment message
+        self.logger.debug('Acknowledging message received.')
+        #ack = struct.pack('>cHcHb', b'1', 4, b'\x05', 1, 1)
+        ack = b'1\x00\x04\x05\x00\x01\x01'
+        s = self.request.send(ack)
+
         #self.data = self.request.recv(1024).strip()
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         #self.data = self.rfile.readline().strip()
-        filename = save_isbd_msg(
-                self.server.datadir, self.client_address, self.data, t0)
+        filename = save_isbd_msg(self.server.datadir, self.client_address,
+                                 self.data, t0)
 
-        if is_inbound(self.data):
-            # Acknowledgment message
-            self.logger.debug('Acknowledging message received.')
-            #ack = struct.pack('>cHcHb', b'1', 4, b'\x05', 1, 1)
-            ack = b'1\x00\x04\x05\x00\x01\x01'
-            s = self.request.send(ack)
-
-            if self.server.postProcessing is not None:
-                postProcessing = self.server.postProcessing
-                self.logger.debug('External post-processing: {}'.format(
-                    postProcessing))
-                cmd = (postProcessing, filename)
-                self.logger.debug("Running: {}".format(cmd))
-                try:
-                    output = subprocess.run(cmd,
-                                            timeout=60,
-                                            check=True,
-                                            stdout=subprocess.PIPE)
-                    self.logger.debug(
-                        'Post-processing output: {}'.format(output.stdout))
-                except:
-                    self.logger.warn('Failed to run external post-processing')
-
-        elif is_outbound(self.data):
-            assert self.server.outbound_address is not None, \
-                    "Undefined outbound server."
-
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(self.server.outbound_address)
+        if self.server.postProcessing is not None:
+            postProcessing = self.server.postProcessing
+            self.logger.debug('External post-processing: {}'.format(
+                postProcessing))
+            cmd = (postProcessing, filename)
+            self.logger.debug("Running: {}".format(cmd))
             try:
-                sock.sendall(self.data)
-                response = sock.recv(2048)
-                self.logger.debug("Received: {}".format(response))
-                self.request.send(response)
-            finally:
-                sock.close()
+                output = subprocess.run(cmd,
+                                        timeout=60,
+                                        check=True,
+                                        stdout=subprocess.PIPE)
+                self.logger.debug(
+                    'Post-processing output: {}'.format(output.stdout))
+            except:
+                self.logger.warn('Failed to run external post-processing')
 
 
 class DirectIPServer(socketserver.TCPServer):
@@ -144,15 +132,10 @@ class DirectIPServer(socketserver.TCPServer):
     def __init__(self,
                  server_address,
                  datadir,
-                 postProcessing=None,
-                 outbound_address=None):
+                 postProcessing=None):
         self.logger = logging.getLogger('DirectIP.Server')
-        self.logger.debug('Initializing DirectIPServer')
-
-        if outbound_address is not None:
-            self.logger.info('Outbound messages will be directed to: %s:%s' %
-                    outbound_address)
-            self.outbound_address = outbound_address
+        self.logger.info(
+                'Initializing DirectIPServer version: {}'.format(__version__))
 
         if not os.path.exists(datadir):
             self.logger.critical('Invalid datadir: {}'.format(datadir))
@@ -178,8 +161,7 @@ class ThreadedDirectIPServer(socketserver.ThreadingMixIn, DirectIPServer):
     pass
 
 
-def runserver(host, port, datadir, postProcessing=None,
-              outbound_address=None):
+def runserver(host, port, datadir, postProcessing=None):
     """Runs a Direct-IP server to listen for messages.
 
     Initiate DirectIPServer and keep it alive listening for calls.
@@ -192,8 +174,9 @@ def runserver(host, port, datadir, postProcessing=None,
             with the message just received will be the single argument.
     """
     module_logger.debug('Initializing runserver().')
-    server = ThreadedDirectIPServer((host, port), datadir, postProcessing,
-            outbound_address)
+    server = ThreadedDirectIPServer((host, port),
+                                    datadir=datadir,
+                                    postProcessing=postProcessing)
     module_logger.info('Listening as %s:%s' % (host, port))
     try:
         server.serve_forever()
